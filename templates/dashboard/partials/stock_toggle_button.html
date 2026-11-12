@@ -1,0 +1,12 @@
+<form hx-post="{% url 'dashboard:toggle_dish_stock' pk=dish.id %}"
+      hx-target="#toggle-container-{{ dish.id }}"
+      hx-swap="innerHTML"
+      method="post">
+    {% csrf_token %}
+    <button type="submit" 
+            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+            style="background-color: {% if dish.is_available %}#2C5E43{% else %}#374151{% endif %};">
+        <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out"
+              style="transform: translateX({% if dish.is_available %}20px{% else %}0px{% endif %});"></span>
+    </button>
+</form>

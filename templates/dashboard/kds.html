@@ -1,0 +1,47 @@
+{% extends 'dashboard/base_admin.html' %}
+
+{% block title %}Kitchen Order Display (KDS) — Caffiestaan{% endblock %}
+{% block pagename %}Live Kitchen Order Display (KDS){% endblock %}
+
+{% block admin_content %}
+<div x-data="{ soundEnabled: true }">
+    <!-- Top Action Bar -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-serif font-bold text-white">Live Kitchen Order Display (KDS)</h1>
+            <p class="text-xs text-gray-400 mt-0.5">Real-time Kanban queue with automatic audio chimes.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span class="text-xs text-gray-400 font-mono">Auto-polling: 8s</span>
+            <button @click="soundEnabled = !soundEnabled"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border transition flex items-center space-x-1.5"
+                    :class="soundEnabled ? 'border-emerald-500/50 bg-emerald-950/40 text-emerald-400' : 'border-gray-700 bg-gray-900 text-gray-500'">
+                <span>AUDIO ALERTS:</span>
+                <span x-text="soundEnabled ? 'ON' : 'MUTED'"></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 4 Kanban Columns Wrapper (Polled every 8s via HTMX) -->
+    <div id="kds-kanban-wrapper"
+         hx-get="{% url 'dashboard:kds_feed' %}"
+         hx-trigger="every 8s">
+        {% include 'dashboard/partials/kds_kanban_columns.html' %}
+    </div>
+
+    <!-- Audio Chime for Pending Orders -->
+    <audio id="orderAlertAudio" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+</div>
+
+<script>
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        if (evt.detail.target.id === 'kds-kanban-wrapper') {
+            const hasPending = document.querySelector('[data-pending="true"]');
+            const audio = document.getElementById('orderAlertAudio');
+            if (hasPending && audio) {
+                audio.play().catch(e => console.log('Audio autoplay prevented.'));
+            }
+        }
+    });
+</script>
+{% endblock %}

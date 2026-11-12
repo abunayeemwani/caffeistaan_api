@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Caffiestaan Operations Platform{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        terracotta: '#C26D43',
+                        espresso: '#1A1412',
+                        cream: '#FBF9F5',
+                        cardBg: '#1F1A17',
+                        sideBg: '#130E0C',
+                    }
+                }
+            }
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        /* Modern, ultra-thin transparent scrollbar */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.18) transparent; /* Firefox */
+        }
+
+        /* WebKit (Chrome, Edge, Safari, Opera) */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;              /* Thin track width */
+            height: 4px;
+            background: transparent; /* Completely removes the white background */
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent; /* No background track */
+            margin: 6px 0;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.18); /* Muted translucent thumb */
+            border-radius: 9999px;
+            transition: background 0.2s ease;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(194, 109, 67, 0.7); /* Accents into Caffiestaan Terracotta on hover */
+        }
+
+        /* Optional: hides the top/bottom arrow buttons in legacy webkit */
+        .custom-scrollbar::-webkit-scrollbar-button {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-[#120E0C] text-gray-100 flex min-h-screen font-sans antialiased">
+
+    <!-- Left Dark Sidebar (Matches Screens 01, 02, 03) -->
+    <aside class="w-60 bg-[#17120F] border-r border-white/5 flex flex-col justify-between p-4 flex-shrink-0">
+        <div>
+            <!-- Brand Icon & Name -->
+            <div class="flex items-center space-x-3 px-2 py-4 mb-4">
+                <div class="w-9 h-9 rounded-xl bg-terracotta flex items-center justify-center font-serif text-white font-bold text-lg shadow-lg shadow-terracotta/20">
+                    C
+                </div>
+                <span class="font-serif text-lg font-bold text-white tracking-wide">Caffiestaan</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="space-y-1 text-xs font-semibold tracking-wider uppercase">
+                <a href="{% url 'dashboard:kds' %}" 
+                   class="flex items-center space-x-3 px-3 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'kds' %}bg-terracotta text-white font-bold shadow-md shadow-terracotta/30{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    <span>Kitchen (KDS)</span>
+                </a>
+
+                <a href="{% url 'dashboard:menu_manager' %}" 
+                   class="flex items-center space-x-3 px-3 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'menu_manager' %}bg-terracotta text-white font-bold shadow-md shadow-terracotta/30{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    <span>Dishes & Stock</span>
+                </a>
+
+                <a href="{% url 'dashboard:reservation_desk' %}" 
+                   class="flex items-center space-x-3 px-3 py-3 rounded-xl transition {% if request.resolver_match.url_name == 'reservation_desk' %}bg-terracotta text-white font-bold shadow-md shadow-terracotta/30{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>Floor & Sales</span>
+                </a>
+
+                <a href="/admin/" target="_blank"
+                   class="flex items-center space-x-3 px-3 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span>System Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="px-2 py-3 border-t border-white/5 text-[11px] text-gray-500 font-mono">
+            Caffiestaan Core v2.0
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-grow flex flex-col min-w-0 overflow-y-auto">
+        <!-- Top Operations Bar (Matches Screen 01/02 Header) -->
+        <header class="h-16 bg-[#17120F]/80 backdrop-blur border-b border-white/5 px-6 flex justify-between items-center flex-shrink-0">
+            <div class="flex items-center space-x-3">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-red-950/60 text-red-400 border border-red-800/40">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping mr-1.5"></span>
+                    Live Feed
+                </span>
+                <span class="text-xs text-gray-400 font-mono hidden sm:inline">{% block pagename %}Operations{% endblock %}</span>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                </button>
+                <div class="flex items-center space-x-2 pl-2 border-l border-white/10">
+                    <div class="w-8 h-8 rounded-full bg-terracotta/30 border border-terracotta flex items-center justify-center text-xs font-bold text-terracotta">
+                        {{ request.user.full_name|default:"CF"|slice:":2" }}
+                    </div>
+                    <span class="text-xs font-semibold text-gray-300 hidden md:inline">{{ request.user.full_name|default:"Staff" }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body Injection -->
+        <main class="flex-grow p-6">
+            {% block admin_content %}{% endblock %}
+        </main>
+    </div>
+
+</body>
+</html>

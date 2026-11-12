@@ -1,0 +1,82 @@
+{% extends 'dashboard/base_admin.html' %}
+
+{% block title %}Live Table Reservation & Operations — Caffiestaan{% endblock %}
+{% block pagename %}Booking &bull; Floor Desk{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- Top Row: Interactive Floor Map + Upcoming Bookings -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Floor Plan (T-01 to T-12) -->
+        <div class="lg:col-span-8 bg-[#17120F] border border-white/5 rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-white/5">
+                <h2 class="font-serif text-lg font-bold text-white">Live Table Reservation Desk</h2>
+                <!-- Status Legend -->
+                <div class="flex items-center space-x-4 text-xs font-medium">
+                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span class="text-gray-400">Available</span></span>
+                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span><span class="text-gray-400">Seated</span></span>
+                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span><span class="text-gray-400">Booked</span></span>
+                </div>
+            </div>
+
+            <!-- Table Grid (Matches Screen 03 Layout) -->
+            <div class="grid grid-cols-5 gap-3 pt-2">
+                {% for t in tables %}
+                <div class="p-4 rounded-xl text-center font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md
+                    {% if t.status == 'available' %}bg-emerald-900/60 text-emerald-200 border border-emerald-700/50 hover:bg-emerald-800/80
+                    {% elif t.status == 'seated' %}bg-red-900/60 text-red-200 border border-red-700/50 hover:bg-red-800/80
+                    {% else %}bg-amber-900/60 text-amber-200 border border-amber-700/50 hover:bg-amber-800/80{% endif %}">
+                    <span>{{ t.num }}</span>
+                    <span class="block text-[10px] font-normal opacity-80 mt-1 capitalize">{{ t.status }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Upcoming Bookings Feed -->
+        <div class="lg:col-span-4 bg-[#17120F] border border-white/5 rounded-2xl p-6 shadow-xl space-y-4">
+            <h3 class="font-serif text-sm font-bold text-white uppercase tracking-wider">Upcoming Bookings</h3>
+            <div class="space-y-3">
+                {% for b in upcoming_bookings %}
+                <div class="flex justify-between items-center p-3 rounded-xl bg-white/[0.03] border border-white/5">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-terracotta/20 text-terracotta flex items-center justify-center font-bold text-xs">
+                            {{ b.name|slice:":2" }}
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-white block">{{ b.name }}</span>
+                            <span class="text-[11px] text-gray-400">{{ b.guests }} guests</span>
+                        </div>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-terracotta">{{ b.time }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Row: Daily Operations Summary -->
+    <div class="bg-[#17120F] border border-white/5 rounded-2xl p-6 shadow-xl space-y-6">
+        <h3 class="font-serif text-base font-bold text-white">Daily Operations Summary</h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                <span class="text-xs font-mono text-gray-400 block">Today's Revenue</span>
+                <span class="text-2xl font-serif font-bold text-terracotta mt-1 block">₹{{ today_revenue }}</span>
+            </div>
+            <div class="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                <span class="text-xs font-mono text-gray-400 block">Active Orders</span>
+                <span class="text-2xl font-serif font-bold text-white mt-1 block">{{ active_orders_count }}</span>
+            </div>
+            <div class="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                <span class="text-xs font-mono text-gray-400 block">Tables Seated</span>
+                <span class="text-2xl font-serif font-bold text-white mt-1 block">5 / 12</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
