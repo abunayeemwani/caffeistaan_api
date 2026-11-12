@@ -18,11 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('staff/', include('dashboard.urls', namespace='dashboard')),
     path('api/v1/menu/', include('menu.urls', namespace='menu_api')),
+    path('', RedirectView.as_view(url='/staff/kds/', permanent=False)),
     path('api/v1/orders/', include('orders.urls', namespace='orders_api')),
     path('api/v1/auth/', include('accounts.urls', namespace='accounts_api')),
 ]
