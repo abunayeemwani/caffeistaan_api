@@ -145,8 +145,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Cafe Defaults
-CAFE_NAME = 'Caffiestaan'
-CAFE_EMAIL = 'caffiestaan@gmail.com'
+CAFE_NAME = 'Caffeistaan'
+CAFE_EMAIL = 'caffeistaan@gmail.com'
 CAFE_PHONE = '+91 6005833574'
 CAFE_TAX_PERCENTAGE = 18.0
 CAFE_DELIVERY_FEE = 20.00

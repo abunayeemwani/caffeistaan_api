@@ -41,11 +41,11 @@ class NotificationService:
             return
 
         status_messages = {
-            'ACCEPTED': 'Your Caffiestaan order has been accepted!',
+            'ACCEPTED': 'Your Caffeistaan order has been accepted!',
             'PREPARING': 'Your brew & dishes are currently being prepared.',
             'READY': 'Your order is packed and ready!',
             'DISPATCHED': 'Your rider is on the way with your warm order.',
-            'COMPLETED': 'Delivered! Enjoy your Caffiestaan experience.',
+            'COMPLETED': 'Delivered! Enjoy your Caffeistaan experience.',
         }
 
         body = status_messages.get(order.order_status, f"Order status updated: {order.order_status}")
