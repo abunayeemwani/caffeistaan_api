@@ -24,8 +24,9 @@
 
     <!-- 4 Kanban Columns Wrapper (Polled every 8s via HTMX) -->
     <div id="kds-kanban-wrapper"
-         hx-get="{% url 'dashboard:kds_feed' %}"
-         hx-trigger="every 8s">
+        hx-get="{% url 'dashboard:kds_feed' %}"
+        hx-trigger="every 8s [!document.body.classList.contains('modal-open')]"
+    >
         {% include 'dashboard/partials/kds_kanban_columns.html' %}
     </div>
 
@@ -34,6 +35,17 @@
 </div>
 
 <script>
+    // 1. Prevent background GET polls from closing an open modal
+    document.body.addEventListener('htmx:beforeSwap', function(evt) {
+        if (document.body.classList.contains('modal-open') && evt.detail.target.id === 'kds-kanban-wrapper') {
+            // Cancel background GET polling swaps, but allow POST updates to go through
+            if (evt.detail.requestConfig && evt.detail.requestConfig.verb === 'get') {
+                evt.detail.shouldSwap = false;
+            }
+        }
+    });
+
+    // 2. Audio alert trigger for incoming pending orders
     document.body.addEventListener('htmx:afterSwap', function(evt) {
         if (evt.detail.target.id === 'kds-kanban-wrapper') {
             const hasPending = document.querySelector('[data-pending="true"]');

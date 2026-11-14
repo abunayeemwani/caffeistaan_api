@@ -5,6 +5,54 @@ from .models import Order, OrderStatusHistory
 from .notifications import NotificationService
 
 
+class OrderFSMService:
+    VALID_TRANSITIONS = {
+        Order.OrderStatus.PENDING: [
+            Order.OrderStatus.ACCEPTED,
+            Order.OrderStatus.REJECTED,
+            Order.OrderStatus.CANCELLED
+        ],
+        Order.OrderStatus.ACCEPTED: [
+            Order.OrderStatus.PREPARING,
+            Order.OrderStatus.REJECTED,
+            Order.OrderStatus.CANCELLED
+        ],
+        Order.OrderStatus.PREPARING: [
+            Order.OrderStatus.READY,
+            Order.OrderStatus.REJECTED,
+            Order.OrderStatus.CANCELLED
+        ],
+        Order.OrderStatus.READY: [
+            Order.OrderStatus.DISPATCHED,
+            Order.OrderStatus.COMPLETED
+        ],
+        Order.OrderStatus.DISPATCHED: [
+            Order.OrderStatus.COMPLETED,
+            Order.OrderStatus.CANCELLED
+        ],
+        Order.OrderStatus.COMPLETED: [],
+        Order.OrderStatus.CANCELLED: [],
+        Order.OrderStatus.REJECTED: [],
+    }
+
+    @classmethod
+    @transaction.atomic
+    def transition_status(cls, order: Order, new_status: str, user=None, comments="") -> Order:
+        if new_status not in cls.VALID_TRANSITIONS.get(order.order_status, []):
+            raise ValueError(f"Cannot transition order #{order.order_number} from {order.order_status} to {new_status}.")
+
+        order.order_status = new_status
+        order.save(update_fields=['order_status', 'updated_at'])
+
+        OrderStatusHistory.objects.create(
+            order=order,
+            status=new_status,
+            comments=comments or f"Status changed to {new_status}",
+            changed_by=user if (user and user.is_authenticated) else None
+        )
+        return order
+
+
 class OrderService:
     @staticmethod
     def generate_order_number() -> str:

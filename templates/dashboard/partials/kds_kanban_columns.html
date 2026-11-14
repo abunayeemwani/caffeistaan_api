@@ -1,131 +1,62 @@
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+<!-- templates/dashboard/partials/kds_kanban_columns.html -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5" id="kanban-board-root">
 
     <!-- Column 1: PENDING -->
-    <div class="bg-[#17120F]/60 rounded-2xl p-4 border border-white/5 flex flex-col">
+    <div class="bg-[#17120F]/70 rounded-2xl p-4 border border-white/5 flex flex-col">
         <div class="flex justify-between items-center pb-3 border-b border-white/5 mb-4">
-            <span class="text-xs font-bold uppercase tracking-widest text-amber-500">PENDING</span>
+            <span class="text-xs font-bold uppercase tracking-widest text-amber-500">PENDING APPROVAL</span>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400">{{ pending_orders.count }}</span>
         </div>
         <div class="space-y-4 flex-grow overflow-y-auto max-h-[75vh] custom-scrollbar pr-1">
             {% for order in pending_orders %}
-            <div class="bg-[#211B17] border border-amber-500/50 rounded-xl p-3.5 shadow-lg relative" data-pending="true">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="font-mono text-xs font-bold text-amber-400">#{{ order.order_number|slice:"-8:" }}</span>
-                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 font-mono">{{ order.created_at|timesince }} ago</span>
-                </div>
-                <div class="space-y-1.5 border-t border-white/5 pt-2 mb-3">
-                    {% for it in order.items.all %}
-                    <p class="text-xs font-bold text-white">{{ it.quantity }}x {{ it.dish_name }}</p>
-                    {% if it.variant_name %}<p class="text-[11px] text-gray-400">Size: {{ it.variant_name }}</p>{% endif %}
-                    {% if it.addons_summary %}<p class="text-[11px] text-gray-400">{{ it.addons_summary }}</p>{% endif %}
-                    {% endfor %}
-                </div>
-                <form hx-post="{% url 'dashboard:update_status' order_number=order.order_number %}" hx-target="#kds-kanban-wrapper" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="new_status" value="ACCEPTED">
-                    <button type="submit" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition">
-                        Accept Order
-                    </button>
-                </form>
-            </div>
+                {% include 'dashboard/partials/order_card_widget.html' with order=order next_status="ACCEPTED" next_label="Accept Order" next_btn_class="bg-amber-600 hover:bg-amber-500" %}
             {% empty %}
-            <div class="py-12 text-center text-gray-600 text-xs">No pending orders</div>
+                <div class="py-12 text-center text-gray-600 text-xs">No pending orders</div>
             {% endfor %}
         </div>
     </div>
 
     <!-- Column 2: ACCEPTED -->
-    <div class="bg-[#17120F]/60 rounded-2xl p-4 border border-white/5 flex flex-col">
+    <div class="bg-[#17120F]/70 rounded-2xl p-4 border border-white/5 flex flex-col">
         <div class="flex justify-between items-center pb-3 border-b border-white/5 mb-4">
             <span class="text-xs font-bold uppercase tracking-widest text-emerald-500">ACCEPTED</span>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400">{{ accepted_orders.count }}</span>
         </div>
         <div class="space-y-4 flex-grow overflow-y-auto max-h-[75vh] custom-scrollbar pr-1">
             {% for order in accepted_orders %}
-            <div class="bg-[#211B17] border border-white/5 rounded-xl p-3.5 shadow-lg">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="font-mono text-xs font-bold text-gray-300">#{{ order.order_number|slice:"-8:" }}</span>
-                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/5 text-gray-400 font-mono">{{ order.created_at|timesince }} ago</span>
-                </div>
-                <div class="space-y-1.5 border-t border-white/5 pt-2 mb-3">
-                    {% for it in order.items.all %}
-                    <p class="text-xs font-bold text-white">{{ it.quantity }}x {{ it.dish_name }}</p>
-                    {% endfor %}
-                </div>
-                <form hx-post="{% url 'dashboard:update_status' order_number=order.order_number %}" hx-target="#kds-kanban-wrapper" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="new_status" value="PREPARING">
-                    <button type="submit" class="w-full py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition">
-                        Start Preparing
-                    </button>
-                </form>
-            </div>
+                {% include 'dashboard/partials/order_card_widget.html' with order=order next_status="PREPARING" next_label="Start Preparing" next_btn_class="bg-yellow-600 hover:bg-yellow-500" %}
             {% empty %}
-            <div class="py-12 text-center text-gray-600 text-xs">No accepted orders</div>
+                <div class="py-12 text-center text-gray-600 text-xs">No accepted orders</div>
             {% endfor %}
         </div>
     </div>
 
     <!-- Column 3: PREPARING -->
-    <div class="bg-[#17120F]/60 rounded-2xl p-4 border border-white/5 flex flex-col">
+    <div class="bg-[#17120F]/70 rounded-2xl p-4 border border-white/5 flex flex-col">
         <div class="flex justify-between items-center pb-3 border-b border-white/5 mb-4">
             <span class="text-xs font-bold uppercase tracking-widest text-yellow-500">PREPARING</span>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-yellow-500/10 text-yellow-400">{{ preparing_orders.count }}</span>
         </div>
         <div class="space-y-4 flex-grow overflow-y-auto max-h-[75vh] custom-scrollbar pr-1">
             {% for order in preparing_orders %}
-            <div class="bg-[#211B17] border border-white/5 rounded-xl p-3.5 shadow-lg">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="font-mono text-xs font-bold text-gray-300">#{{ order.order_number|slice:"-8:" }}</span>
-                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-yellow-500/20 text-yellow-300 font-mono">{{ order.created_at|timesince }} ago</span>
-                </div>
-                <div class="space-y-1.5 border-t border-white/5 pt-2 mb-3">
-                    {% for it in order.items.all %}
-                    <p class="text-xs font-bold text-white">{{ it.quantity }}x {{ it.dish_name }}</p>
-                    {% endfor %}
-                </div>
-                <form hx-post="{% url 'dashboard:update_status' order_number=order.order_number %}" hx-target="#kds-kanban-wrapper" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="new_status" value="READY">
-                    <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition">
-                        Mark Ready
-                    </button>
-                </form>
-            </div>
+                {% include 'dashboard/partials/order_card_widget.html' with order=order next_status="READY" next_label="Mark as Ready" next_btn_class="bg-emerald-600 hover:bg-emerald-500" %}
             {% empty %}
-            <div class="py-12 text-center text-gray-600 text-xs">No orders in preparation</div>
+                <div class="py-12 text-center text-gray-600 text-xs">No orders in preparation</div>
             {% endfor %}
         </div>
     </div>
 
-    <!-- Column 4: READY -->
-    <div class="bg-[#17120F]/60 rounded-2xl p-4 border border-white/5 flex flex-col">
+    <!-- Column 4: READY / DISPATCHED -->
+    <div class="bg-[#17120F]/70 rounded-2xl p-4 border border-white/5 flex flex-col">
         <div class="flex justify-between items-center pb-3 border-b border-white/5 mb-4">
-            <span class="text-xs font-bold uppercase tracking-widest text-blue-500">READY</span>
+            <span class="text-xs font-bold uppercase tracking-widest text-blue-500">READY FOR DISPATCH</span>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-500/10 text-blue-400">{{ ready_orders.count }}</span>
         </div>
         <div class="space-y-4 flex-grow overflow-y-auto max-h-[75vh] custom-scrollbar pr-1">
             {% for order in ready_orders %}
-            <div class="bg-[#211B17] border border-white/5 rounded-xl p-3.5 shadow-lg">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="font-mono text-xs font-bold text-gray-300">#{{ order.order_number|slice:"-8:" }}</span>
-                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-300 font-mono">{{ order.get_order_type_display }}</span>
-                </div>
-                <div class="space-y-1.5 border-t border-white/5 pt-2 mb-3">
-                    {% for it in order.items.all %}
-                    <p class="text-xs font-bold text-white">{{ it.quantity }}x {{ it.dish_name }}</p>
-                    {% endfor %}
-                </div>
-                <form hx-post="{% url 'dashboard:update_status' order_number=order.order_number %}" hx-target="#kds-kanban-wrapper" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="new_status" value="COMPLETED">
-                    <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition">
-                        Complete & Handover
-                    </button>
-                </form>
-            </div>
+                {% include 'dashboard/partials/order_card_widget.html' with order=order next_status="COMPLETED" next_label="Complete & Handover" next_btn_class="bg-blue-600 hover:bg-blue-500" %}
             {% empty %}
-            <div class="py-12 text-center text-gray-600 text-xs">No orders ready</div>
+                <div class="py-12 text-center text-gray-600 text-xs">No orders ready</div>
             {% endfor %}
         </div>
     </div>

@@ -1,7 +1,17 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import Address, CustomerProfile
 
 User = get_user_model()
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = [
+            'id', 'address_label', 'recipient_name', 'phone', 
+            'street_address', 'locality', 'postal_code', 'is_default'
+        ]
+
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
@@ -18,7 +28,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         return user
 
+
 class UserProfileSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(source='profile.phone', read_only=True)
+    addresses = AddressSerializer(source='saved_addresses', many=True, read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'phone', 'full_name', 'is_staff', 'is_cafe_staff']
+        fields = ['id', 'phone', 'full_name', 'is_staff', 'is_cafe_staff', 'addresses']

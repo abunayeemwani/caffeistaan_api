@@ -19,6 +19,13 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from rest_framework.routers import DefaultRouter
+
+from core.views import CafeConfigAPIView
+from accounts.views import AddressViewSet
+
+router = DefaultRouter()
+router.register(r'addresses', AddressViewSet, basename='user-address')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +34,8 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/staff/kds/', permanent=False)),
     path('api/v1/orders/', include('orders.urls', namespace='orders_api')),
     path('api/v1/auth/', include('accounts.urls', namespace='accounts_api')),
+    path('api/v1/config/', CafeConfigAPIView.as_view(), name='cafe_config'),
+    path('api/v1/', include(router.urls)),
 ]
 
 if settings.DEBUG:

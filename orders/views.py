@@ -11,6 +11,7 @@ from .models import Order, OrderItem, OrderStatusHistory
 from .services import OrderService
 from .serializers import CheckoutRequestSerializer, OrderDetailSerializer
 from .notifications import NotificationService
+from core.models import CafeConfiguration
 
 
 class CustomerOrderHistoryAPIView(generics.ListAPIView):
@@ -34,7 +35,16 @@ class MobileCheckoutAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @transaction.atomic
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
+        config = CafeConfiguration.get_solo()
+
+        # 1. Check if café is accepting orders
+        if not config.is_ordering_open:
+            return Response(
+                {"error": config.closure_message or "Ordering is temporarily paused."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = CheckoutRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -42,24 +52,17 @@ class MobileCheckoutAPIView(APIView):
         subtotal = Decimal('0.00')
         evaluated_items = []
 
-        # Recalculate prices from the database (never trust client amounts)
+        # 2. Server-side authoritative price calculation
         for line in data['items']:
-            dish = Dish.objects.select_for_update().filter(id=line['dish_id'], is_available=True).first()
-            if not dish:
-                return Response(
-                    {"error": f"Item with ID {line['dish_id']} is currently unavailable."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
+            dish = Dish.objects.select_for_update().get(id=line['dish_id'], is_available=True)
             unit_price = dish.current_price
             variant_name = ""
 
             # Check variant price
             if line.get('variant_id'):
-                variant = DishVariant.objects.filter(id=line['variant_id'], dish=dish).first()
-                if variant:
-                    unit_price += variant.price_adjustment
-                    variant_name = variant.name
+                variant = DishVariant.objects.get(id=line['variant_id'], dish=dish)
+                unit_price += variant.price_adjustment
+                variant_name = variant.name
 
             # Check add-ons
             addon_names = []
@@ -67,10 +70,9 @@ class MobileCheckoutAPIView(APIView):
                 addons = AddOn.objects.filter(id__in=line['addon_ids'], dish=dish, is_available=True)
                 for addon in addons:
                     unit_price += addon.price
-                    addon_names.append(f"{addon.name} (+₹{addon.price})")
+                    addon_names.append(f"{addon.name} (+{addon.price})")
 
-            quantity = line['quantity']
-            line_total = (unit_price * quantity).quantize(Decimal('0.01'))
+            line_total = unit_price * line['quantity']
             subtotal += line_total
 
             evaluated_items.append({
@@ -79,15 +81,24 @@ class MobileCheckoutAPIView(APIView):
                 'variant_name': variant_name,
                 'addons_summary': ", ".join(addon_names),
                 'unit_price': unit_price,
-                'quantity': quantity,
+                'quantity': line['quantity'],
                 'line_total': line_total,
                 'special_instructions': line.get('special_instructions', '')
             })
 
         order_type = data['order_type']
-        delivery_fee = Decimal(str(settings.CAFE_DELIVERY_FEE)) if order_type == Order.OrderType.DELIVERY else Decimal('0.00')
-        tax_rate = Decimal(str(settings.CAFE_TAX_PERCENTAGE)) / Decimal('100.00')
+
+        # 3. Dynamic delivery fee based on order type & free delivery threshold
+        delivery_fee = Decimal('0.00')
+        if order_type == Order.OrderType.DELIVERY:
+            if subtotal < config.free_delivery_threshold:
+                delivery_fee = config.delivery_fee.quantize(Decimal('0.01'))
+
+        # 4. Dynamic GST calculation from the model
+        tax_rate = config.gst_percentage / Decimal('100.00')
         tax_amount = (subtotal * tax_rate).quantize(Decimal('0.01'))
+
+        # 5. Grand total
         total_amount = subtotal + tax_amount + delivery_fee
 
         order = Order.objects.create(
@@ -133,7 +144,12 @@ class MobileCheckoutAPIView(APIView):
             comments="Order successfully placed via Mobile App (Cash on Delivery)."
         )
 
-        return Response(OrderDetailSerializer(order).data, status=status.HTTP_201_CREATED)
+        return Response({
+            "success": True,
+            "order_number": order.order_number,
+            "total_amount": str(order.total_amount),
+            "payment_method": "Cash on Delivery (COD)"
+        }, status=status.HTTP_201_CREATED)
 
 
 class OrderTrackAPIView(APIView):
